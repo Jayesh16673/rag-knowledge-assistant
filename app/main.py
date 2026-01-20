@@ -1,4 +1,6 @@
 from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from pathlib import Path
 
 from app.ingestion.loaders import load_pdf
 from app.ingestion.chunking import chunk_docs
@@ -7,7 +9,11 @@ from app.retrieval.hybrid import HybridRetriever
 from app.generation.answer_generator import generate_answer
 from app.generation.citations import add_citations
 
-app = FastAPI()
+app = FastAPI(
+    title="RAG Knowledge Assistant",
+    description="Production-grade RAG system with hybrid retrieval and citations",
+    version="1.0.0"
+)
 
 VECTORSTORE = None
 DOCUMENTS = None
@@ -17,18 +23,42 @@ MIN_DOCS_REQUIRED = 1
 MIN_CONTEXT_CHARS = 200
 
 
+class IngestRequest(BaseModel):
+    pdf_path: str = "data/sample_docs/sample.pdf"
+
+
 @app.post("/ingest")
-def ingest():
+def ingest(request: IngestRequest = None):
+    """
+    Ingest a PDF document for Q&A.
+    
+    Default: data/sample_docs/sample.pdf
+    Example: {"pdf_path": "data/my_document.pdf"}
+    """
     global VECTORSTORE, DOCUMENTS, RETRIEVER
 
-    docs = load_pdf("data/sample_docs/sample.pdf")
-    chunks = chunk_docs(docs)
+    # Use default if not provided
+    pdf_path = request.pdf_path if request else "data/sample_docs/sample.pdf"
+    
+    # Verify file exists
+    if not Path(pdf_path).exists():
+        raise HTTPException(status_code=404, detail=f"PDF not found: {pdf_path}")
+    
+    try:
+        docs = load_pdf(pdf_path)
+        chunks = chunk_docs(docs)
 
-    VECTORSTORE = create_vectorstore(chunks)
-    DOCUMENTS = chunks
-    RETRIEVER = HybridRetriever(VECTORSTORE, DOCUMENTS)
+        VECTORSTORE = create_vectorstore(chunks)
+        DOCUMENTS = chunks
+        RETRIEVER = HybridRetriever(VECTORSTORE, DOCUMENTS)
 
-    return {"status": "documents ingested"}
+        return {
+            "status": "documents ingested",
+            "pdf_path": pdf_path,
+            "chunks_created": len(chunks)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error ingesting PDF: {str(e)}")
 
 
 @app.get("/query")
