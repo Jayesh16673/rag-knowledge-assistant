@@ -1,0 +1,42 @@
+# Git ignore
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data
+data/sample_docs/*.pdf
+models/*.gguf
+
+# Logs
+*.log
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Cache
+.cache/
+.mypy_cache/

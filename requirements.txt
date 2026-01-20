@@ -1,0 +1,13 @@
+fastapi==0.110.0
+uvicorn==0.29.0
+
+langchain==0.1.20
+langchain-core==0.1.53
+langchain-community==0.0.38
+
+sentence-transformers==2.6.1
+faiss-cpu==1.7.4
+rank-bm25==0.2.2
+
+ctransformers
+python-dotenv==1.0.1
