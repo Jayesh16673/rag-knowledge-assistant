@@ -1,6 +1,6 @@
 FROM python:3.10-slim
 
-# Create non-root user
+# Create non-root user for security
 RUN useradd -m -u 1000 appuser
 
 WORKDIR /app
@@ -10,17 +10,20 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements
+# Copy requirements first for better caching
 COPY requirements.txt .
 
-# Install Python dependencies
+# Install Python dependencies (no cache)
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy entire project
 COPY . .
 
-# Change ownership
+# Change ownership to non-root user
 RUN chown -R appuser:appuser /app
+
+# Create cache directory for answer caching
+RUN mkdir -p /app/cache && chown -R appuser:appuser /app/cache
 
 # Switch to non-root user
 USER appuser
@@ -28,5 +31,9 @@ USER appuser
 # Expose port
 EXPOSE 8000
 
-# Run the app
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:8000/docs', timeout=5)" || exit 1
+
+# Run the app with production settings
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
