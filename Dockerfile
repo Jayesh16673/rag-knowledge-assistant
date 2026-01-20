@@ -1,5 +1,8 @@
 FROM python:3.10-slim
 
+# Create non-root user
+RUN useradd -m -u 1000 appuser
+
 WORKDIR /app
 
 # Install system dependencies
@@ -15,6 +18,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy entire project
 COPY . .
+
+# Change ownership
+RUN chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
 
 # Expose port
 EXPOSE 8000
