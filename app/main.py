@@ -27,7 +27,7 @@ RETRIEVER = None
 
 MIN_DOCS_REQUIRED = 1
 MIN_CONTEXT_CHARS = 200
-MAX_CONTEXT_LENGTH = 2000  # Limit context to improve LLM speed
+MAX_CONTEXT_LENGTH = 1000  # Reduced from 2000 for free tier memory
 
 
 class IngestRequest(BaseModel):

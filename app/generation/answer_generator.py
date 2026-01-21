@@ -5,9 +5,9 @@ MODEL_PATH = "models/tinyllama-1.1b-chat-v1.0-q4_k_m.gguf"
 llm = AutoModelForCausalLM.from_pretrained(
     MODEL_PATH,
     model_type="llama",
-    max_new_tokens=256,
+    max_new_tokens=128,  # Reduced from 256 for free tier
     temperature=0.0,
-    context_length=2048,
+    context_length=1024,  # Reduced from 2048 for free tier
     gpu_layers=0  # CPU inference (set to 20+ if GPU available)
 )
 
