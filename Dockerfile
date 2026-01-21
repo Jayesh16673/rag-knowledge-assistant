@@ -5,19 +5,24 @@ RUN useradd -m -u 1000 appuser
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+# Install system dependencies - minimal
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Copy requirements first for better caching
 COPY requirements.txt .
 
-# Install Python dependencies (no cache)
-RUN pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies (no cache, strip bytecode)
+RUN pip install --no-cache-dir --no-compile -r requirements.txt && \
+    find /usr/local -name "*.pyc" -delete && \
+    find /usr/local -name "__pycache__" -delete
 
 # Copy entire project
 COPY . .
+
+# Remove unnecessary files to save space
+RUN rm -rf .git .github *.md scripts tests .pytest_cache .mypy_cache
 
 # Change ownership to non-root user
 RUN chown -R appuser:appuser /app
@@ -31,9 +36,5 @@ USER appuser
 # Expose port
 EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8000/docs', timeout=5)" || exit 1
-
-# Run the app with production settings
+# Run the app with single worker for 512MB
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

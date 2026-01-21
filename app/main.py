@@ -26,8 +26,8 @@ DOCUMENTS = None
 RETRIEVER = None
 
 MIN_DOCS_REQUIRED = 1
-MIN_CONTEXT_CHARS = 200
-MAX_CONTEXT_LENGTH = 1000  # Reduced from 2000 for free tier memory
+MIN_CONTEXT_CHARS = 100  # Reduced for 512MB
+MAX_CONTEXT_LENGTH = 500  # Reduced from 1000 for 512MB tier
 
 
 class IngestRequest(BaseModel):
